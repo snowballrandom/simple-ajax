@@ -1,4 +1,4 @@
-# DataTableReload
+# Simple Ajax
 A simple way to make ajax request. 
 
 This allow you to make ajax calls with out having to define every value every time. You can either set the values you want in the file
