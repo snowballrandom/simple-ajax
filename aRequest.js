@@ -67,7 +67,7 @@ var aRequest = (function(){
 	f.setMethod = (requestMethod)=>{
 		method = requestMethod; 
 	}
-	f.getUrl = ()=>{
+	f.getMethod = ()=>{
 		return method;
 	}
 	
