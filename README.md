@@ -33,5 +33,22 @@ aRequest.call({url:'https://goinvoiceit.co/'}, true, true)
   }
 );
 
+// Passing in custom options
+aRequest.call({
+  url:'someurl',
+  data:{
+    someParam:'some_value'
+    },
+  headers:aRequest.getHeaders(),
+  crossDomain:aRequest.getCrossDomain(),
+  async:true, 
+  timeout:0,
+  method:'post'
+  }, true, true)
+  .then(
+  function(response){
+    console.log(response)
+  })
+
 ```
 
