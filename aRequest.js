@@ -399,7 +399,7 @@ var aRequest = (function(){
 	
 	return init();
 	
-})// End Customers Function
+})// End Function
 
 window.aRequest = aRequest;
 
