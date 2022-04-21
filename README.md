@@ -23,13 +23,6 @@ myRequest.getResponse()
 // Making none async call 
 myRequest.call({url:'someurl'}, false);
 
-// Saving last request
-myRequest.call({url:'someurl'}, true, true).then(
-  function(r){
-    r.
-  }
-);
-
 // Get the response
 myRequest.getResponse()
 
