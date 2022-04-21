@@ -23,6 +23,13 @@ myRequest.getResponse()
 // Making none async call 
 myRequest.call({url:'someurl'}, false);
 
+// Saving last request
+myRequest.call({url:'someurl'}, true, true).then(
+  function(r){
+    r.
+  }
+);
+
 // Get the response
 myRequest.getResponse()
 
@@ -31,7 +38,8 @@ myRequest.getResponse()
 myRequest.call({url:'https://goinvoiceit.co/'}, true, true)
 .then(
   function(response){
-    console.log(response.previous)
+    // Last Call
+    console.log(response.previous[0])
   }
 );
 
