@@ -54,4 +54,4 @@ myRequest.call({
   })
 
 ```
-I will add examples on other options soon!
+I will add more examples on other options soon!
