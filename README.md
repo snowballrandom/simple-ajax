@@ -8,25 +8,27 @@ Example:
 
 ```javascript
 
+myRequest = new aRequest();
+
 // Make async ajax call 
-aRequest.call({url:'someurl.someplace'}).then(
+myRequest.call({url:'someurl.someplace'}).then(
   function(response){
     console.log(response)
   }
 );
 
 // Or get the response later by calling
-aRequest.getResponse()
+myRequest.getResponse()
 
 // Making none async call 
-aRequsest.call({url:'someurl'}, false);
+myRequest.call({url:'someurl'}, false);
 
 // Get the response
-aRequest.getResponse()
+myRequest.getResponse()
 
 // If you want to return the previous response 
 // on the next response you can by setting the third paramerter to true
-aRequest.call({url:'https://goinvoiceit.co/'}, true, true)
+myRequest.call({url:'https://goinvoiceit.co/'}, true, true)
 .then(
   function(response){
     console.log(response.previous)
@@ -34,7 +36,7 @@ aRequest.call({url:'https://goinvoiceit.co/'}, true, true)
 );
 
 // Passing in custom options
-aRequest.call({
+myRequest.call({
   url:'someurl',
   data:{
     someParam:'some_value'
@@ -51,4 +53,4 @@ aRequest.call({
   })
 
 ```
-
+I will add examples on other options soon!
