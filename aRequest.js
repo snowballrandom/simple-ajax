@@ -2,135 +2,235 @@
 	
 'use strict';
 
+var previousRequest = [];
+
 var aRequest = (function(){
 	
-	var // Request Timeout
-		timeout = 0,
+	var saveRequest = false;
+	
+	var options = {
+		// Request Timeout
+		timeout : 0,
 		// Cross Domain
-		crossDomain = false,
+		crossDomain : false,
 		// Request Method
-		method = "POST",
+		method : "POST",
 		// Asyncornous
-		async = true,
+		async : true,
 		// Request URL
-		url = '',
+		url : '',
 		// Post Data
-		postData = null,
+		postData : null,
 		// Request Headers
-		headers = {'X-Requested-With': 'XMLHttpRequest'},
-		// Request is complete ?
-		isComplete = true,
-		// Response Error
-		responseError = false,
-		// Response Status
-		responseStatus = undefined,
-		// Response XHR Data
-		responseXhr = undefined,
-		// Response Error Data
-		responseData = undefined,
-		// Response Error Messages
-		responseErrorMsg = [],
-		// Response Object		
-		requestObject = {},
-		// Previous Request
-		previousRequest = null;
-		
-	var f={};
-
-	f.isComplete = isComplete;
-	
-	// Request Timeout
-	f.setTimeout = (timoutLimit)=>{
-		timeout = timoutLimit; 
-	}
-	f.getTimeout = ()=>{
-		return timeout;
-	}
-
-	// Allow Cross Domain
-	f.setCrossDomain = (isCrossDomain)=>{
-		crossDomain = isCrossDomain; 
-	}
-	f.getCrossDomain = ()=>{
-		return crossDomain;
-	}
-	
-	// Is Async
-	f.setAsync = (isAsync)=>{
-		async = isAsync; 
-	}
-	f.getAsync = ()=>{
-		return async;
-	}
-	
-	// Request Method	
-	f.setMethod = (requestMethod)=>{
-		method = requestMethod; 
-	}
-	f.getMethod = ()=>{
-		return method;
-	}
-	
-	// Url	
-	f.setUrl = (locationUrl)=>{
-		url = locationUrl; 
-	}
-	f.getUrl = ()=>{
-		return url;
-	}
-	
-	// Request Data	
-	f.setData = (data)=>{
-		postData = data; 
-	}
-	f.getData = ()=>{
-		return postData;
-	}
-	
-	// Headers
-	f.setHeaders = (headersObject)=>{
-		headers = headersObject; 
-	}
-	f.getHeaders = ()=>{
-		return headers;
-	}
-			
-	f.setOptions = (options)=>{
-		if(typeof options == "object" 
-		&& typeof options !== "undefined"){
-			requestObject = {};
-			$.each(options, function(i,e){
-				requestObject[i] = e;
-			})
-		}else{
-		   requestObject = {
-        	 timeout:timeout,
-        	 crossDomain:crossDomain,
-             method: method,
-             async: async,
-             url: url,
-             data: postData,
-             headers: headers,
-             statusCode: {
+		headers : {'X-Requested-With': 'XMLHttpRequest'},
+		// Cache (default: true, false for dataType 'script' and 'jsonp')
+		cache : false,
+		// Content Type (default: 'application/x-www-form-urlencoded; charset=UTF-8') 
+                contentType : "application/x-www-form-urlencoded; charset=UTF-8",
+		// Process 
+                processData : true,
+		// Status Code
+		statusCode : {
 			   404: function(data) {
 				 error = true;
 				 data = data;				
 			   }
 			 }
+		}
+		
+	var response = {	
+		// Request is complete ?
+		isComplete : true,
+		// Response Error
+		Error : false,
+		// Response Status
+		Status : undefined,
+		// Response XHR Data
+		Xhr : undefined,
+		// Response Error Data
+		Data : undefined,
+		// Response Error Messages
+		ErrorMsg : [],
+		// Previous Request
+		Previous : null
+		}
+		
+	// Response Object		
+	var	requestObject = {};
+			
+	var f={};
+
+	f.isComplete = response.isComplete;
+	
+	// Request Timeout
+	f.setTimeout = (timoutLimit)=>{
+		options.timeout = timoutLimit; 
+	}
+	f.getTimeout = ()=>{
+		return options.timeout;
+	}
+
+	// Allow Cross Domain
+	f.setCrossDomain = (isCrossDomain)=>{
+		options.crossDomain = isCrossDomain; 
+	}
+	f.getCrossDomain = ()=>{
+		return options.crossDomain;
+	}
+	
+	// Is Async
+	f.setAsync = (isAsync)=>{
+		options.async = isAsync; 
+	}
+	f.getAsync = ()=>{
+		return options.async;
+	}
+	
+	// Request Method	
+	f.setMethod = (requestMethod)=>{
+		options.method = requestMethod; 
+	}
+	f.getMethod = ()=>{
+		return options.method;
+	}
+	
+	// Url	
+	f.setUrl = (locationUrl)=>{
+		options.url = locationUrl; 
+	}
+	f.getUrl = ()=>{
+		return options.url;
+	}
+	
+	// Request Data	
+	f.setData = (data)=>{
+		options.postData = data; 
+	}
+	f.getData = ()=>{
+		return options.postData;
+	}
+	
+	// Headers
+	f.setHeaders = (headersObject)=>{
+		options.headers = headersObject; 
+	}
+	f.getHeaders = ()=>{
+		return options.headers;
+	}
+	
+	// Set Cache
+	f.setCache = (isCache)=>{
+		options.cache = isCache;
+	}	
+	f.getCache = ()=>{
+		return options.cache;
+	}	
+
+	/** 
+	 * Set ContentType
+	 * Type: Boolean or String
+	 * default: 'application/x-www-form-urlencoded; charset=UTF-8'
+	 *
+	 */
+	f.setContentType = (type)=>{
+		options.contentType = type;
+	}	
+	f.getContentType = ()=>{
+		return options.contentType;
+	}
+	
+	/**
+	 * Set processData
+	 *
+	 * Type: Boolean
+	 * By default, data passed in to the data option as 
+	 * an object (technically, anything other than a string) 
+	 * will be processed and transformed into a query string, 
+	 * fitting to the default 
+	 * content-type "application/x-www-form-urlencoded". 
+	 * If you want to send a DOMDocument, or other non-processed data, 
+	 * set this option to false.
+	 */
+	f.setProcessData = (bool)=>{
+		options.processData = bool;
+	}	
+	f.getProcessData = ()=>{
+		return options.processData;
+	}	
+	
+	f.setStatusCode = (object)=>{
+		options.statusCode = object;
+	}
+	f.getStatusCode = ()=>{
+		return options.statusCode;
+	}
+	
+	f.setOptions = (o)=>{
+		if(typeof o == "object" 
+		&& typeof o !== "undefined"){
+			requestObject = {};
+			$.each(o, function(i,e){
+			  requestObject[i] = e;
+			})
+		}else{
+	     requestObject = {
+             timeout:options.timeout,
+             crossDomain:options.crossDomain,
+             method: options.method,
+             async: options.async,
+             url: options.url,
+             data: options.postData,
+             headers: options.headers,
+	     cache: options.cache,
+	     contentType: options.contentType,
+	     processData: options.processData,
+             statusCode: options.statusCode
            }	
 		}
 	}
 	f.getOptions = ()=>{
 		return requestObject;
 	}	
+	/**
+	 * Resets the ajax options to the default values	
+	 */
+	f.resetOptions = ()=>{
+		
+		options.timeout = 0,
+		// Cross Domain
+		options.crossDomain = false,
+		// Request Method
+		options.method = "POST",
+		// Asyncornous
+		options.async = true,
+		// Request URL
+		options.url = '',
+		// Post Data
+		options.postData = null,
+		// Request Headers
+		options.headers = {'X-Requested-With': 'XMLHttpRequest'},
+		// Cache (default: true, false for dataType 'script' and 'jsonp')
+		options.cache = false,
+		// Content Type (default: 'application/x-www-form-urlencoded; charset=UTF-8') 
+        	options.contentType = "application/x-www-form-urlencoded; charset=UTF-8",
+		// Process 
+        	options.processData = true,
+		// Status Code
+		options.statusCode = {
+			   404: function(data) {
+				 error = true;
+				 data = data;				
+			   }
+			 }
+	}
 	
 	f.getResponse = (previous)=>{
 		return {
-			error: responseError,
-			status:responseStatus,
-			xhr:responseXhr,
-			data:responseData,
-			errorMsg:responseErrorMsg,
+			error: response.Error,
+			status:response.Status,
+			xhr:response.Xhr,
+			data:response.Data,
+			errorMsg:response.ErrorMsg,
 			previous:previous
 		}	
 	}
@@ -143,7 +243,28 @@ var aRequest = (function(){
 	        }		
 		}catch(e){}
 		return false;
-	}	
+	}
+	
+	/**
+	 * Saves Last Request 
+ 	 * this will save the current request 
+	 * and the following request. On the 3rd request the 
+	 * oldest request will be removed from the array.
+	 *   	
+	 */
+	f.saveLastRequest = ()=>{
+		// Return Last Request 
+		if(saveRequest){
+		  // Remove first item
+		  if(previousRequest.length >= 2){
+			previousRequest.shift();
+		  }	
+		  previousRequest.push(f.getResponse());
+		  response.Previous = previousRequest;
+		}else{
+		  response.Previous = [];
+		}		
+	}
 	/**
 	 * Simple call does not wrap the ajax request in a promise
 	 */
@@ -151,33 +272,35 @@ var aRequest = (function(){
 	  try{
 	    $.ajax(f.getOptions())
 		.done(function(data, status, xhr){
-			responseData = data;
-			responseStatus = status;
-			responseXhr = xhr;
+			response.Data = data;
+			response.Status = status;
+			response.Xhr = xhr;
 		})
 		.fail(function(data_fail, status_fail, xhr_fail){
-			responseError = true;
-			responseData = data_fail;
-			responseStatus = status_fail;
-			responseXhr = xhr_fail;						
+			response.Error = true;
+			response.Data = data_fail;
+			response.Status = status_fail;
+			response.Xhr = xhr_fail;
+			f.saveLastRequest()						
 		})
 		.always(function(data_always, status_always, xhr_always){
-			responseData = data_always;
-			responseStatus = status_always;
-			responseXhr = xhr_always;
-			isComplete = true;
+			response.Data = data_always;
+			response.Status = status_always;
+			response.Xhr = xhr_always;
+			response.isComplete = true;
+			f.saveLastRequest()
 		}).catch(function(error){
 			console.log('Error: ajax request error!');
-			responseError = true;
-			responseErrorMsg = error;
-			isComplete = true;
+			response.Error = true;
+			response.ErrorMsg = error;
+			response.isComplete = true;
 		})
 		
 	  }catch(Error){
 		console.log(Error);
-		responseError = true;
-		responseErrorMsg = error;
-		isComplete = true;
+		response.Error = true;
+		response.ErrorMsg = error;
+		response.isComplete = true;
 	  }				
 	} 
 	/**
@@ -191,55 +314,59 @@ var aRequest = (function(){
 		   //aRequest.doSubmit(url, postData);
 		   $.ajax(f.getOptions())
 			.done(function(data, status, xhr){
-				responseData = data;
-				responseStatus = status;
-				responseXhr = xhr;
+				response.Data = data;
+				response.Status = status;
+				response.Xhr = xhr;
 			})
 			.fail(function(data_fail, status_fail, xhr_fail){
-				responseError = true;
-				responseData = data_fail;
-				responseStatus = status_fail;
-				responseXhr = xhr_fail;						
+				response.Error = true;
+				response.Data = data_fail;
+				response.Status = status_fail;
+				response.Xhr = xhr_fail;
+				f.saveLastRequest()						
 			})
 			.always(function(data_always, status_always, xhr_always){
-				responseData = data_always;
-				responseStatus = status_always;
-				responseXhr = xhr_always;	
+				response.Data = data_always;
+				response.Status = status_always;
+				response.Xhr = xhr_always;	
 				
-				isComplete = true;
+				response.isComplete = true;
 				
-				if(responseError){
+				f.saveLastRequest()
+				
+				if(response.Error){
 					console.log('Reject');
-					reject(f.getResponse(previousRequest));
+					reject(f.getResponse(response.Previous));
 				}else{
 					console.log('Resolve');
-					resolve(f.getResponse(previousRequest));
+					resolve(f.getResponse(response.Previous));
 				}					
 			}).catch(function(error){
 				console.log('Error: ajax request error!');
-				responseError = true;
-				responseErrorMsg = error;
+				response.Error = true;
+				response.ErrorMsg = error;
 			})
 			
 		}).catch(function(error){
 			console.log('Error: Could not resolve promise!');
-			responseError = true;
-			responseErrorMsg = error;
+			response.Error = true;
+			response.ErrorMsg = error;
 			isComplete = true;
     	});
 	  }catch(Error){
 		console.log(Error);
-		responseError = true;
-		responseErrorMsg = error;
-		isComplete = true;
+		response.Error = true;
+		response.ErrorMsg = error;
+		response.isComplete = true;
 	  }
 	} 
 	
-	f.call = (options, isPromise=true, lastRequest=false)=>{
+	f.call = (options, async=true, lastRequest=false)=>{
 		try{
 			
 			// Request Complete ?
-			isComplete = false;
+			response.isComplete = false;
+			saveRequest = lastRequest;
 			
 			// Set options ?
 			if(Object.keys(requestObject).length == 0
@@ -248,40 +375,32 @@ var aRequest = (function(){
 			{
 			  f.setOptions(options);
 			}
-			
-			// Return Last Request 
-			if(lastRequest){
-			  previousRequest = f.getResponse();
-			}else{
-			  previousRequest = null;
-			}
 				
-			if(isPromise){
+			if(async){
 				// Return the promise
 				return f.callPromise();
 			}else{
+				f.setAsync(false);
 				// Simple Call
 				f.callSimple();
 			}				
 			
 			// Return the previous request or null
-			return previousRequest;
+			return response.Previous;
 			
 		}catch(Error){
 			console.log(Error);
 		}
 	}	
-	
+		
 	function init(){
-    // Return the functions
-		return = f;
+	  return f;
 	}
 	
-  // Initialize & return
 	return init();
 	
-})// End aRequest()
+})// End Customers Function
 
-window.aRequest = aRequest();
+window.aRequest = aRequest;
 
 })();
