@@ -28,7 +28,7 @@ myRequest.getResponse()
 
 // If you want to return the previous response 
 // on the next response you can by setting the third paramerter to true
-myRequest.call({url:'https://goinvoiceit.co/'}, true, true)
+myRequest.call({url:'https://someurl.com/'}, true, true)
 .then(
   function(response){
     // Last Call
